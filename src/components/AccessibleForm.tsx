@@ -1,7 +1,7 @@
-
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import FormField from './FormField';
+import CustomSelect from './CustomSelect';
 import { toast } from 'sonner';
 import { Send, CheckCircle } from 'lucide-react';
 
@@ -36,6 +36,13 @@ const AccessibleForm = () => {
 
   const [errors, setErrors] = useState<FormErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const urgencyOptions = [
+    { value: 'low', label: 'Low - Response within 5 business days' },
+    { value: 'medium', label: 'Medium - Response within 2 business days' },
+    { value: 'high', label: 'High - Response within 24 hours' },
+    { value: 'urgent', label: 'Urgent - Response within 4 hours' }
+  ];
 
   const validateForm = (): boolean => {
     const newErrors: FormErrors = {};
@@ -250,28 +257,17 @@ const AccessibleForm = () => {
               </div>
             </fieldset>
 
-            {/* Urgency Select */}
-            <div className="space-y-2">
-              <label htmlFor="urgency" className="block text-sm font-medium text-gray-700">
-                Urgency Level *
-              </label>
-              <select
-                id="urgency"
-                value={formData.urgency}
-                onChange={(e) => handleInputChange('urgency', e.target.value)}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white transition-colors"
-                aria-required="true"
-                aria-describedby="urgency-help"
-              >
-                <option value="low">Low - Response within 5 business days</option>
-                <option value="medium">Medium - Response within 2 business days</option>
-                <option value="high">High - Response within 24 hours</option>
-                <option value="urgent">Urgent - Response within 4 hours</option>
-              </select>
-              <p id="urgency-help" className="text-sm text-gray-500">
-                Select the urgency level for your inquiry
-              </p>
-            </div>
+            {/* Custom Urgency Select */}
+            <CustomSelect
+              id="urgency"
+              label="Urgency Level"
+              value={formData.urgency}
+              onChange={(value) => handleInputChange('urgency', value)}
+              options={urgencyOptions}
+              required
+              helpText="Select the urgency level for your inquiry"
+              placeholder="Select urgency level"
+            />
           </fieldset>
         </div>
 
