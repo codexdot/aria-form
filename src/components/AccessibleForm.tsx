@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Button } from "@/components/ui/button";
 import FormField from './FormField';
 import CustomSelect from './CustomSelect';
 import { toast } from 'sonner';
-import { Send, CheckCircle } from 'lucide-react';
+import { Send, CheckCircle, AlertCircle } from 'lucide-react';
 
 interface FormData {
   firstName: string;
@@ -36,6 +36,8 @@ const AccessibleForm = () => {
 
   const [errors, setErrors] = useState<FormErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const formRef = useRef<HTMLFormElement>(null);
+  const firstErrorRef = useRef<HTMLElement>(null);
 
   const urgencyOptions = [
     { value: 'low', label: 'Low - Response within 5 business days' },
@@ -92,20 +94,34 @@ const AccessibleForm = () => {
     e.preventDefault();
     
     if (!validateForm()) {
-      // Announce errors to screen readers
+      // Focus first error field for better accessibility
+      const errorFields = Object.keys(errors);
+      if (errorFields.length > 0) {
+        const firstErrorField = document.getElementById(errorFields[0]);
+        if (firstErrorField) {
+          firstErrorField.focus();
+          firstErrorField.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }
+      
+      // Announce errors to screen readers with more detail
       const errorCount = Object.keys(errors).length;
-      toast.error(`Form submission failed. Please correct ${errorCount} error${errorCount > 1 ? 's' : ''}.`);
+      const errorList = Object.entries(errors).map(([field, error]) => `${field}: ${error}`).join('. ');
+      toast.error(`Form submission failed. ${errorCount} error${errorCount > 1 ? 's' : ''} found: ${errorList}`);
       return;
     }
 
     setIsSubmitting(true);
     
+    // Announce form submission start
+    toast.info('Submitting your message...');
+    
     // Simulate form submission
     try {
       await new Promise(resolve => setTimeout(resolve, 2000));
-      toast.success('Thank you! Your message has been submitted successfully.');
+      toast.success('Thank you! Your message has been submitted successfully. We will respond according to your selected urgency level.');
       
-      // Reset form
+      // Reset form and announce completion
       setFormData({
         firstName: '',
         lastName: '',
@@ -117,8 +133,14 @@ const AccessibleForm = () => {
         contactMethod: 'email',
         urgency: 'medium'
       });
+      
+      // Focus back to first field after successful submission
+      const firstField = document.getElementById('firstName');
+      if (firstField) {
+        firstField.focus();
+      }
     } catch (error) {
-      toast.error('An error occurred. Please try again.');
+      toast.error('An error occurred while submitting your message. Please try again or contact us directly.');
     } finally {
       setIsSubmitting(false);
     }
@@ -126,23 +148,47 @@ const AccessibleForm = () => {
 
   return (
     <div className="space-y-8">
+      {/* Skip link for keyboard users */}
+      <a 
+        href="#main-form" 
+        className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 bg-blue-600 text-white px-4 py-2 rounded-lg z-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+      >
+        Skip to main form
+      </a>
+
       {/* Header Section */}
       <div className="text-center space-y-3">
         <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full mb-4">
-          <Send className="w-8 h-8 text-white" />
+          <Send className="w-8 h-8 text-white" aria-hidden="true" />
         </div>
         <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Get in Touch</h1>
         <p className="text-gray-600 max-w-md mx-auto leading-relaxed">
           We'd love to hear from you. Send us a message and we'll respond as soon as possible.
         </p>
+        <div className="text-sm text-gray-500 mt-2">
+          <p>Fields marked with an asterisk (*) are required.</p>
+        </div>
       </div>
 
-      <form onSubmit={handleSubmit} noValidate role="form" aria-label="Contact form" className="space-y-8">
+      <form 
+        ref={formRef}
+        id="main-form"
+        onSubmit={handleSubmit} 
+        noValidate 
+        role="form" 
+        aria-label="Contact form"
+        aria-describedby="form-instructions"
+        className="space-y-8"
+      >
+        <div id="form-instructions" className="sr-only">
+          This form allows you to send us a message. Navigate through fields using Tab key. Required fields are marked with asterisk and will be announced by screen readers.
+        </div>
+
         {/* Personal Information Section */}
         <div className="bg-gradient-to-r from-blue-50/50 to-indigo-50/50 rounded-xl p-6 border border-blue-100/50">
           <fieldset className="space-y-6">
             <legend className="text-xl font-semibold text-gray-900 mb-4 flex items-center gap-2">
-              <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+              <div className="w-2 h-2 bg-blue-500 rounded-full" aria-hidden="true"></div>
               Personal Information
             </legend>
             
@@ -201,7 +247,7 @@ const AccessibleForm = () => {
         <div className="bg-gradient-to-r from-slate-50/50 to-gray-50/50 rounded-xl p-6 border border-gray-100/50">
           <fieldset className="space-y-6">
             <legend className="text-xl font-semibold text-gray-900 mb-4 flex items-center gap-2">
-              <div className="w-2 h-2 bg-slate-500 rounded-full"></div>
+              <div className="w-2 h-2 bg-slate-500 rounded-full" aria-hidden="true"></div>
               Message Details
             </legend>
             
@@ -232,13 +278,13 @@ const AccessibleForm = () => {
               <legend className="block text-sm font-medium text-gray-700">
                 Preferred Contact Method *
               </legend>
-              <div className="grid sm:grid-cols-3 gap-3" role="radiogroup" aria-required="true">
+              <div className="grid sm:grid-cols-3 gap-3" role="radiogroup" aria-required="true" aria-describedby="contact-method-help">
                 {[
-                  { value: 'email', label: 'Email' },
-                  { value: 'phone', label: 'Phone' },
-                  { value: 'either', label: 'Either' }
+                  { value: 'email', label: 'Email', description: 'We will contact you via email' },
+                  { value: 'phone', label: 'Phone', description: 'We will call you on your provided phone number' },
+                  { value: 'either', label: 'Either', description: 'We will use whichever method is most convenient' }
                 ].map((option) => (
-                  <label key={option.value} className="relative flex items-center p-4 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors group">
+                  <label key={option.value} className="relative flex items-center p-4 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors group focus-within:ring-2 focus-within:ring-blue-500 focus-within:ring-offset-2">
                     <input
                       type="radio"
                       name="contactMethod"
@@ -248,13 +294,21 @@ const AccessibleForm = () => {
                       className="h-4 w-4 text-blue-600 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 border-gray-300"
                       aria-describedby={`contactMethod-${option.value}-desc`}
                     />
-                    <span className="ml-3 text-gray-700 font-medium group-hover:text-gray-900">{option.label}</span>
+                    <div className="ml-3 flex-1">
+                      <span className="text-gray-700 font-medium group-hover:text-gray-900">{option.label}</span>
+                      <p id={`contactMethod-${option.value}-desc`} className="text-xs text-gray-500 mt-1">
+                        {option.description}
+                      </p>
+                    </div>
                     {formData.contactMethod === option.value && (
-                      <CheckCircle className="ml-auto w-4 h-4 text-blue-600" />
+                      <CheckCircle className="ml-auto w-4 h-4 text-blue-600" aria-hidden="true" />
                     )}
                   </label>
                 ))}
               </div>
+              <p id="contact-method-help" className="text-sm text-gray-600">
+                Select how you would prefer us to respond to your inquiry
+              </p>
             </fieldset>
 
             {/* Custom Urgency Select */}
@@ -265,7 +319,7 @@ const AccessibleForm = () => {
               onChange={(value) => handleInputChange('urgency', value)}
               options={urgencyOptions}
               required
-              helpText="Select the urgency level for your inquiry"
+              helpText="Select the urgency level for your inquiry to help us prioritize our response"
               placeholder="Select urgency level"
             />
           </fieldset>
@@ -273,7 +327,7 @@ const AccessibleForm = () => {
 
         {/* Newsletter Checkbox */}
         <div className="bg-green-50/50 rounded-xl p-6 border border-green-100/50">
-          <label className="flex items-start cursor-pointer group">
+          <label className="flex items-start cursor-pointer group focus-within:ring-2 focus-within:ring-green-500 focus-within:ring-offset-2 rounded-lg p-2 -m-2">
             <input
               type="checkbox"
               checked={formData.newsletter}
@@ -284,7 +338,7 @@ const AccessibleForm = () => {
             <div className="ml-4">
               <span className="text-gray-900 font-medium group-hover:text-gray-700">Subscribe to our newsletter</span>
               <p id="newsletter-desc" className="text-sm text-gray-600 mt-1">
-                Receive updates about our products and services (optional)
+                Receive updates about our products and services. You can unsubscribe at any time. (Optional)
               </p>
             </div>
           </label>
@@ -301,12 +355,13 @@ const AccessibleForm = () => {
           >
             {isSubmitting ? (
               <>
-                <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2"></div>
-                Submitting...
+                <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2" aria-hidden="true"></div>
+                <span>Submitting...</span>
+                <span className="sr-only">Please wait while we submit your message</span>
               </>
             ) : (
               <>
-                <Send className="w-4 h-4 mr-2" />
+                <Send className="w-4 h-4 mr-2" aria-hidden="true" />
                 Send Message
               </>
             )}
@@ -317,13 +372,24 @@ const AccessibleForm = () => {
           </p>
         </div>
 
-        {/* Screen reader announcements */}
+        {/* Enhanced Screen reader announcements */}
         <div aria-live="polite" aria-atomic="true" className="sr-only">
           {Object.keys(errors).length > 0 && (
-            <span>
-              Form has {Object.keys(errors).length} error{Object.keys(errors).length > 1 ? 's' : ''}. 
-              Please review and correct the highlighted fields.
-            </span>
+            <div>
+              <p>Form validation failed. Please review and correct the following errors:</p>
+              <ul>
+                {Object.entries(errors).map(([field, error]) => (
+                  <li key={field}>{field}: {error}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </div>
+
+        {/* Status announcements */}
+        <div aria-live="assertive" aria-atomic="true" className="sr-only">
+          {isSubmitting && (
+            <p>Form is being submitted. Please wait.</p>
           )}
         </div>
       </form>

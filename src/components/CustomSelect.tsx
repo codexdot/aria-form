@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { ChevronDown, Check } from 'lucide-react';
 
@@ -33,6 +32,7 @@ const CustomSelect: React.FC<CustomSelectProps> = ({
   const triggerRef = useRef<HTMLButtonElement>(null);
   const listboxRef = useRef<HTMLUListElement>(null);
   const optionRefs = useRef<(HTMLLIElement | null)[]>([]);
+  const [announcementText, setAnnouncementText] = useState('');
 
   const selectedOption = options.find(option => option.value === value);
 
@@ -41,17 +41,27 @@ const CustomSelect: React.FC<CustomSelectProps> = ({
   }, [options.length]);
 
   const handleToggle = () => {
-    setIsOpen(!isOpen);
-    if (!isOpen) {
+    const willOpen = !isOpen;
+    setIsOpen(willOpen);
+    
+    if (willOpen) {
       const selectedIndex = options.findIndex(option => option.value === value);
       setFocusedIndex(selectedIndex >= 0 ? selectedIndex : 0);
+      setAnnouncementText(`${options.length} options available. Use arrow keys to navigate.`);
+    } else {
+      setAnnouncementText('');
     }
   };
 
   const handleSelect = (optionValue: string) => {
+    const selectedOption = options.find(opt => opt.value === optionValue);
     onChange(optionValue);
     setIsOpen(false);
     triggerRef.current?.focus();
+    
+    if (selectedOption) {
+      setAnnouncementText(`Selected: ${selectedOption.label}`);
+    }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -69,6 +79,7 @@ const CustomSelect: React.FC<CustomSelectProps> = ({
         if (isOpen) {
           setIsOpen(false);
           triggerRef.current?.focus();
+          setAnnouncementText('Selection cancelled');
         }
         break;
       case 'ArrowDown':
@@ -76,26 +87,34 @@ const CustomSelect: React.FC<CustomSelectProps> = ({
         if (!isOpen) {
           setIsOpen(true);
           setFocusedIndex(0);
+          setAnnouncementText(`${options.length} options available. Use arrow keys to navigate.`);
         } else {
-          setFocusedIndex(prev => Math.min(prev + 1, options.length - 1));
+          const newIndex = Math.min(focusedIndex + 1, options.length - 1);
+          setFocusedIndex(newIndex);
+          setAnnouncementText(`${options[newIndex].label}`);
         }
         break;
       case 'ArrowUp':
         e.preventDefault();
         if (isOpen) {
-          setFocusedIndex(prev => Math.max(prev - 1, 0));
+          const newIndex = Math.max(focusedIndex - 1, 0);
+          setFocusedIndex(newIndex);
+          setAnnouncementText(`${options[newIndex].label}`);
         }
         break;
       case 'Home':
         if (isOpen) {
           e.preventDefault();
           setFocusedIndex(0);
+          setAnnouncementText(`${options[0].label}`);
         }
         break;
       case 'End':
         if (isOpen) {
           e.preventDefault();
-          setFocusedIndex(options.length - 1);
+          const lastIndex = options.length - 1;
+          setFocusedIndex(lastIndex);
+          setAnnouncementText(`${options[lastIndex].label}`);
         }
         break;
     }
@@ -123,12 +142,17 @@ const CustomSelect: React.FC<CustomSelectProps> = ({
     }
   }, [isOpen]);
 
+  const describedBy = [
+    helpText ? `${id}-help` : '',
+    `${id}-status`
+  ].filter(Boolean).join(' ');
+
   return (
     <div className="space-y-2">
       <label htmlFor={id} className="block text-sm font-medium text-gray-900">
         {label}
         {required && (
-          <span className="text-red-500 ml-1" aria-label="required">*</span>
+          <span className="text-red-500 ml-1" aria-label="required field">*</span>
         )}
       </label>
       
@@ -143,7 +167,7 @@ const CustomSelect: React.FC<CustomSelectProps> = ({
           aria-haspopup="listbox"
           aria-expanded={isOpen}
           aria-labelledby={`${id}-label`}
-          aria-describedby={helpText ? `${id}-help` : undefined}
+          aria-describedby={describedBy}
           aria-required={required}
         >
           <span className={selectedOption ? 'text-gray-900' : 'text-gray-500'}>
@@ -153,6 +177,7 @@ const CustomSelect: React.FC<CustomSelectProps> = ({
             className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${
               isOpen ? 'transform rotate-180' : ''
             }`}
+            aria-hidden="true"
           />
         </button>
 
@@ -161,12 +186,14 @@ const CustomSelect: React.FC<CustomSelectProps> = ({
             ref={listboxRef}
             role="listbox"
             aria-labelledby={`${id}-label`}
+            aria-activedescendant={focusedIndex >= 0 ? `${id}-option-${focusedIndex}` : undefined}
             className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-auto"
             tabIndex={-1}
           >
             {options.map((option, index) => (
               <li
                 key={option.value}
+                id={`${id}-option-${index}`}
                 ref={el => optionRefs.current[index] = el}
                 role="option"
                 aria-selected={option.value === value}
@@ -182,7 +209,7 @@ const CustomSelect: React.FC<CustomSelectProps> = ({
               >
                 <span>{option.label}</span>
                 {option.value === value && (
-                  <Check className="w-4 h-4 text-blue-600" />
+                  <Check className="w-4 h-4 text-blue-600" aria-hidden="true" />
                 )}
               </li>
             ))}
@@ -195,6 +222,16 @@ const CustomSelect: React.FC<CustomSelectProps> = ({
           {helpText}
         </p>
       )}
+
+      {/* Status announcements for screen readers */}
+      <div 
+        id={`${id}-status`} 
+        aria-live="polite" 
+        aria-atomic="true" 
+        className="sr-only"
+      >
+        {announcementText}
+      </div>
     </div>
   );
 };
