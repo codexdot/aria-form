@@ -1,9 +1,11 @@
+
 import React, { useState, useRef } from 'react';
-import { Button } from "@/components/ui/button";
-import FormField from './FormField';
-import CustomSelect from './CustomSelect';
 import { toast } from 'sonner';
-import { Send, CheckCircle, AlertCircle } from 'lucide-react';
+import FormHeader from './FormHeader';
+import PersonalInfoSection from './PersonalInfoSection';
+import MessageDetailsSection from './MessageDetailsSection';
+import NewsletterSection from './NewsletterSection';
+import SubmitSection from './SubmitSection';
 
 interface FormData {
   firstName: string;
@@ -21,6 +23,10 @@ interface FormErrors {
   [key: string]: string;
 }
 
+/**
+ * Main accessible contact form component
+ * Orchestrates all form sections and handles form submission
+ */
 const AccessibleForm = () => {
   const [formData, setFormData] = useState<FormData>({
     firstName: '',
@@ -37,14 +43,6 @@ const AccessibleForm = () => {
   const [errors, setErrors] = useState<FormErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const formRef = useRef<HTMLFormElement>(null);
-  const firstErrorRef = useRef<HTMLElement>(null);
-
-  const urgencyOptions = [
-    { value: 'low', label: 'Low - Response within 5 business days' },
-    { value: 'medium', label: 'Medium - Response within 2 business days' },
-    { value: 'high', label: 'High - Response within 24 hours' },
-    { value: 'urgent', label: 'Urgent - Response within 4 hours' }
-  ];
 
   const validateForm = (): boolean => {
     const newErrors: FormErrors = {};
@@ -200,19 +198,7 @@ const AccessibleForm = () => {
         Skip to main form
       </a>
 
-      {/* Header Section */}
-      <div className="text-center space-y-3">
-        <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full mb-4">
-          <Send className="w-8 h-8 text-white" aria-hidden="true" />
-        </div>
-        <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Get in Touch</h1>
-        <p className="text-gray-600 max-w-md mx-auto leading-relaxed">
-          We'd love to hear from you. Send us a message and we'll respond as soon as possible.
-        </p>
-        <div className="text-sm text-gray-500 mt-2">
-          <p>Fields marked with an asterisk (*) are required.</p>
-        </div>
-      </div>
+      <FormHeader />
 
       <form 
         ref={formRef}
@@ -228,193 +214,24 @@ const AccessibleForm = () => {
           This form allows you to send us a message. Navigate through fields using Tab key. Required fields are marked with asterisk and will be announced by screen readers.
         </div>
 
-        {/* Personal Information Section */}
-        <div className="bg-gradient-to-r from-blue-50/50 to-indigo-50/50 rounded-xl p-6 border border-blue-100/50">
-          <fieldset className="space-y-6">
-            <legend className="text-xl font-semibold text-gray-900 mb-4 flex items-center gap-2">
-              <div className="w-2 h-2 bg-blue-500 rounded-full" aria-hidden="true"></div>
-              Personal Information
-            </legend>
-            
-            <div className="grid md:grid-cols-2 gap-6">
-              <FormField
-                id="firstName"
-                label="First Name"
-                type="text"
-                value={formData.firstName}
-                onChange={(value) => handleInputChange('firstName', value)}
-                error={errors.firstName}
-                required
-                autoComplete="given-name"
-              />
-              
-              <FormField
-                id="lastName"
-                label="Last Name"
-                type="text"
-                value={formData.lastName}
-                onChange={(value) => handleInputChange('lastName', value)}
-                error={errors.lastName}
-                required
-                autoComplete="family-name"
-              />
-            </div>
+        <PersonalInfoSection
+          formData={formData}
+          errors={errors}
+          onInputChange={handleInputChange}
+        />
 
-            <div className="grid md:grid-cols-2 gap-6">
-              <FormField
-                id="email"
-                label="Email Address"
-                type="email"
-                value={formData.email}
-                onChange={(value) => handleInputChange('email', value)}
-                error={errors.email}
-                required
-                autoComplete="email"
-                helpText="We'll never share your email with anyone else"
-              />
-              
-              <FormField
-                id="phone"
-                label="Phone Number"
-                type="tel"
-                value={formData.phone}
-                onChange={(value) => handleInputChange('phone', value)}
-                error={errors.phone}
-                autoComplete="tel"
-                helpText="Optional - for urgent matters only"
-              />
-            </div>
-          </fieldset>
-        </div>
+        <MessageDetailsSection
+          formData={formData}
+          errors={errors}
+          onInputChange={handleInputChange}
+        />
 
-        {/* Contact Details Section */}
-        <div className="bg-gradient-to-r from-slate-50/50 to-gray-50/50 rounded-xl p-6 border border-gray-100/50">
-          <fieldset className="space-y-6">
-            <legend className="text-xl font-semibold text-gray-900 mb-4 flex items-center gap-2">
-              <div className="w-2 h-2 bg-slate-500 rounded-full" aria-hidden="true"></div>
-              Message Details
-            </legend>
-            
-            <FormField
-              id="subject"
-              label="Subject"
-              type="text"
-              value={formData.subject}
-              onChange={(value) => handleInputChange('subject', value)}
-              error={errors.subject}
-              required
-              helpText="Brief description of your inquiry"
-            />
+        <NewsletterSection
+          checked={formData.newsletter}
+          onChange={(checked) => handleInputChange('newsletter', checked)}
+        />
 
-            <FormField
-              id="message"
-              label="Message"
-              type="textarea"
-              value={formData.message}
-              onChange={(value) => handleInputChange('message', value)}
-              error={errors.message}
-              required
-              helpText="Please provide details about your inquiry (minimum 10 characters)"
-            />
-
-            {/* Contact Method Radio Group */}
-            <fieldset className="space-y-4">
-              <legend className="block text-sm font-medium text-gray-700">
-                Preferred Contact Method *
-              </legend>
-              <div className="grid sm:grid-cols-3 gap-3" role="radiogroup" aria-required="true" aria-describedby="contact-method-help">
-                {[
-                  { value: 'email', label: 'Email', description: 'We will contact you via email' },
-                  { value: 'phone', label: 'Phone', description: 'We will call you on your provided phone number' },
-                  { value: 'either', label: 'Either', description: 'We will use whichever method is most convenient' }
-                ].map((option) => (
-                  <label key={option.value} className="relative flex items-center p-4 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors group focus-within:ring-2 focus-within:ring-blue-500 focus-within:ring-offset-2">
-                    <input
-                      type="radio"
-                      name="contactMethod"
-                      value={option.value}
-                      checked={formData.contactMethod === option.value}
-                      onChange={(e) => handleInputChange('contactMethod', e.target.value)}
-                      className="h-4 w-4 text-blue-600 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 border-gray-300"
-                      aria-describedby={`contactMethod-${option.value}-desc`}
-                    />
-                    <div className="ml-3 flex-1">
-                      <span className="text-gray-700 font-medium group-hover:text-gray-900">{option.label}</span>
-                      <p id={`contactMethod-${option.value}-desc`} className="text-xs text-gray-500 mt-1">
-                        {option.description}
-                      </p>
-                    </div>
-                    {formData.contactMethod === option.value && (
-                      <CheckCircle className="ml-auto w-4 h-4 text-blue-600" aria-hidden="true" />
-                    )}
-                  </label>
-                ))}
-              </div>
-              <p id="contact-method-help" className="text-sm text-gray-600">
-                Select how you would prefer us to respond to your inquiry
-              </p>
-            </fieldset>
-
-            {/* Custom Urgency Select */}
-            <CustomSelect
-              id="urgency"
-              label="Urgency Level"
-              value={formData.urgency}
-              onChange={(value) => handleInputChange('urgency', value)}
-              options={urgencyOptions}
-              required
-              helpText="Select the urgency level for your inquiry to help us prioritize our response"
-              placeholder="Select urgency level"
-            />
-          </fieldset>
-        </div>
-
-        {/* Newsletter Checkbox */}
-        <div className="bg-green-50/50 rounded-xl p-6 border border-green-100/50">
-          <label className="flex items-start cursor-pointer group focus-within:ring-2 focus-within:ring-green-500 focus-within:ring-offset-2 rounded-lg p-2 -m-2">
-            <input
-              type="checkbox"
-              checked={formData.newsletter}
-              onChange={(e) => handleInputChange('newsletter', e.target.checked)}
-              className="h-5 w-5 text-green-600 focus:ring-2 focus:ring-green-500 focus:ring-offset-2 mt-0.5 border-gray-300 rounded"
-              aria-describedby="newsletter-desc"
-            />
-            <div className="ml-4">
-              <span className="text-gray-900 font-medium group-hover:text-gray-700">Subscribe to our newsletter</span>
-              <p id="newsletter-desc" className="text-sm text-gray-600 mt-1">
-                Receive updates about our products and services. You can unsubscribe at any time. (Optional)
-              </p>
-            </div>
-          </label>
-        </div>
-
-        {/* Submit Button */}
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4">
-          <Button
-            type="submit"
-            disabled={isSubmitting}
-            size="lg"
-            className="w-full sm:w-auto bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-8 py-3 rounded-lg font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl transition-all duration-200"
-            aria-describedby="submit-help"
-          >
-            {isSubmitting ? (
-              <>
-                <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2" aria-hidden="true"></div>
-                <span>Submitting...</span>
-                <span className="sr-only">Please wait while we submit your message</span>
-              </>
-            ) : (
-              <>
-                <Send className="w-4 h-4 mr-2" aria-hidden="true" />
-                Send Message
-              </>
-            )}
-          </Button>
-          
-          <p id="submit-help" className="text-sm text-gray-500 text-center sm:text-left">
-            By submitting, you agree to our terms and privacy policy
-          </p>
-        </div>
+        <SubmitSection isSubmitting={isSubmitting} />
 
         {/* Enhanced Screen reader announcements */}
         <div aria-live="polite" aria-atomic="true" className="sr-only">
