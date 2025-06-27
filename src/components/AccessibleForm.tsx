@@ -135,10 +135,23 @@ const AccessibleForm = () => {
         }
       }
       
-      // Announce errors to screen readers with correct count
+      // Create a more graceful error message
       const errorCount = errorFields.length;
-      const errorList = Object.entries(currentErrors).map(([field, error]) => `${field}: ${error}`).join('. ');
-      toast.error(`Form submission failed. ${errorCount} error${errorCount > 1 ? 's' : ''} found: ${errorList}`);
+      const fieldLabels: { [key: string]: string } = {
+        firstName: 'First Name',
+        lastName: 'Last Name',
+        email: 'Email',
+        phone: 'Phone',
+        subject: 'Subject',
+        message: 'Message'
+      };
+      
+      let errorMessage = `Please fix the following ${errorCount === 1 ? 'issue' : 'issues'}:\n`;
+      errorMessage += Object.entries(currentErrors)
+        .map(([field, error]) => `• ${fieldLabels[field] || field}: ${error}`)
+        .join('\n');
+      
+      toast.error(errorMessage);
       return;
     }
 
