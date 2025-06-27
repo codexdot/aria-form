@@ -1,22 +1,53 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { ChevronDown, Check } from 'lucide-react';
 
+/**
+ * Option interface for select dropdown items
+ */
 interface Option {
+  /** Unique value for the option */
   value: string;
+  /** Display label for the option */
   label: string;
 }
 
+/**
+ * Props for the CustomSelect component
+ */
 interface CustomSelectProps {
+  /** Unique identifier for the select element */
   id: string;
+  /** Currently selected value */
   value: string;
+  /** Callback function called when selection changes */
   onChange: (value: string) => void;
+  /** Array of available options */
   options: Option[];
+  /** Display label for the select field */
   label: string;
+  /** Whether the field is required for form submission */
   required?: boolean;
+  /** Additional help text to guide the user */
   helpText?: string;
+  /** Placeholder text when no option is selected */
   placeholder?: string;
 }
 
+/**
+ * A fully accessible custom select dropdown component with keyboard navigation,
+ * screen reader support, and consistent styling.
+ * 
+ * Features:
+ * - Full keyboard navigation (Arrow keys, Enter, Escape, Home, End)
+ * - Screen reader announcements
+ * - Focus management
+ * - Click outside to close
+ * - Visual focus indicators
+ * 
+ * @param props - The CustomSelect component props
+ * @returns A fully accessible custom select component
+ */
 const CustomSelect: React.FC<CustomSelectProps> = ({
   id,
   value,
@@ -27,24 +58,33 @@ const CustomSelect: React.FC<CustomSelectProps> = ({
   helpText,
   placeholder = "Select an option"
 }) => {
+  // Component state
   const [isOpen, setIsOpen] = useState(false);
   const [focusedIndex, setFocusedIndex] = useState(-1);
+  const [announcementText, setAnnouncementText] = useState('');
+
+  // Refs for DOM manipulation and focus management
   const triggerRef = useRef<HTMLButtonElement>(null);
   const listboxRef = useRef<HTMLUListElement>(null);
   const optionRefs = useRef<(HTMLLIElement | null)[]>([]);
-  const [announcementText, setAnnouncementText] = useState('');
 
+  // Find the currently selected option
   const selectedOption = options.find(option => option.value === value);
 
+  // Update option refs array when options change
   useEffect(() => {
     optionRefs.current = optionRefs.current.slice(0, options.length);
   }, [options.length]);
 
+  /**
+   * Handles opening/closing the dropdown
+   */
   const handleToggle = () => {
     const willOpen = !isOpen;
     setIsOpen(willOpen);
     
     if (willOpen) {
+      // When opening, focus on selected item or first item
       const selectedIndex = options.findIndex(option => option.value === value);
       setFocusedIndex(selectedIndex >= 0 ? selectedIndex : 0);
       setAnnouncementText(`${options.length} options available. Use arrow keys to navigate.`);
@@ -53,6 +93,10 @@ const CustomSelect: React.FC<CustomSelectProps> = ({
     }
   };
 
+  /**
+   * Handles option selection
+   * @param optionValue - The value of the selected option
+   */
   const handleSelect = (optionValue: string) => {
     const selectedOption = options.find(opt => opt.value === optionValue);
     onChange(optionValue);
@@ -64,6 +108,10 @@ const CustomSelect: React.FC<CustomSelectProps> = ({
     }
   };
 
+  /**
+   * Handles keyboard navigation
+   * @param e - Keyboard event
+   */
   const handleKeyDown = (e: React.KeyboardEvent) => {
     switch (e.key) {
       case 'Enter':
@@ -75,6 +123,7 @@ const CustomSelect: React.FC<CustomSelectProps> = ({
           handleToggle();
         }
         break;
+        
       case 'Escape':
         if (isOpen) {
           setIsOpen(false);
@@ -82,6 +131,7 @@ const CustomSelect: React.FC<CustomSelectProps> = ({
           setAnnouncementText('Selection cancelled');
         }
         break;
+        
       case 'ArrowDown':
         e.preventDefault();
         if (!isOpen) {
@@ -94,6 +144,7 @@ const CustomSelect: React.FC<CustomSelectProps> = ({
           setAnnouncementText(`${options[newIndex].label}`);
         }
         break;
+        
       case 'ArrowUp':
         e.preventDefault();
         if (isOpen) {
@@ -102,6 +153,7 @@ const CustomSelect: React.FC<CustomSelectProps> = ({
           setAnnouncementText(`${options[newIndex].label}`);
         }
         break;
+        
       case 'Home':
         if (isOpen) {
           e.preventDefault();
@@ -109,6 +161,7 @@ const CustomSelect: React.FC<CustomSelectProps> = ({
           setAnnouncementText(`${options[0].label}`);
         }
         break;
+        
       case 'End':
         if (isOpen) {
           e.preventDefault();
@@ -120,6 +173,7 @@ const CustomSelect: React.FC<CustomSelectProps> = ({
     }
   };
 
+  // Scroll focused option into view
   useEffect(() => {
     if (isOpen && focusedIndex >= 0 && optionRefs.current[focusedIndex]) {
       optionRefs.current[focusedIndex]?.scrollIntoView({
@@ -128,6 +182,7 @@ const CustomSelect: React.FC<CustomSelectProps> = ({
     }
   }, [focusedIndex, isOpen]);
 
+  // Handle clicking outside to close dropdown
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (triggerRef.current && !triggerRef.current.contains(event.target as Node) &&
@@ -142,6 +197,7 @@ const CustomSelect: React.FC<CustomSelectProps> = ({
     }
   }, [isOpen]);
 
+  // Build describedBy attribute for accessibility
   const describedBy = [
     helpText ? `${id}-help` : '',
     `${id}-status`
@@ -149,6 +205,7 @@ const CustomSelect: React.FC<CustomSelectProps> = ({
 
   return (
     <div className="space-y-2">
+      {/* Field Label */}
       <label htmlFor={id} className="block text-sm font-medium text-gray-900">
         {label}
         {required && (
@@ -156,6 +213,7 @@ const CustomSelect: React.FC<CustomSelectProps> = ({
         )}
       </label>
       
+      {/* Select Trigger Button */}
       <div className="relative">
         <button
           ref={triggerRef}
@@ -182,6 +240,7 @@ const CustomSelect: React.FC<CustomSelectProps> = ({
           />
         </button>
 
+        {/* Dropdown Options */}
         {isOpen && (
           <ul
             ref={listboxRef}
@@ -218,13 +277,14 @@ const CustomSelect: React.FC<CustomSelectProps> = ({
         )}
       </div>
 
+      {/* Help Text */}
       {helpText && (
         <p id={`${id}-help`} className="text-sm text-gray-600">
           {helpText}
         </p>
       )}
 
-      {/* Status announcements for screen readers */}
+      {/* Screen Reader Status Announcements */}
       <div 
         id={`${id}-status`} 
         aria-live="polite" 
