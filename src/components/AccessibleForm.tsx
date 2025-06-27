@@ -94,8 +94,39 @@ const AccessibleForm = () => {
     e.preventDefault();
     
     if (!validateForm()) {
+      // Get the current errors from validateForm
+      const currentErrors: FormErrors = {};
+
+      if (!formData.firstName.trim()) {
+        currentErrors.firstName = 'First name is required';
+      }
+
+      if (!formData.lastName.trim()) {
+        currentErrors.lastName = 'Last name is required';
+      }
+
+      if (!formData.email.trim()) {
+        currentErrors.email = 'Email address is required';
+      } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+        currentErrors.email = 'Please enter a valid email address';
+      }
+
+      if (!formData.subject.trim()) {
+        currentErrors.subject = 'Subject is required';
+      }
+
+      if (!formData.message.trim()) {
+        currentErrors.message = 'Message is required';
+      } else if (formData.message.trim().length < 10) {
+        currentErrors.message = 'Message must be at least 10 characters long';
+      }
+
+      if (formData.phone && !/^[\d\s\-\+\(\)]+$/.test(formData.phone)) {
+        currentErrors.phone = 'Please enter a valid phone number';
+      }
+
       // Focus first error field for better accessibility
-      const errorFields = Object.keys(errors);
+      const errorFields = Object.keys(currentErrors);
       if (errorFields.length > 0) {
         const firstErrorField = document.getElementById(errorFields[0]);
         if (firstErrorField) {
@@ -104,9 +135,9 @@ const AccessibleForm = () => {
         }
       }
       
-      // Announce errors to screen readers with more detail
-      const errorCount = Object.keys(errors).length;
-      const errorList = Object.entries(errors).map(([field, error]) => `${field}: ${error}`).join('. ');
+      // Announce errors to screen readers with correct count
+      const errorCount = errorFields.length;
+      const errorList = Object.entries(currentErrors).map(([field, error]) => `${field}: ${error}`).join('. ');
       toast.error(`Form submission failed. ${errorCount} error${errorCount > 1 ? 's' : ''} found: ${errorList}`);
       return;
     }
