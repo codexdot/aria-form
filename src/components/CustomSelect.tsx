@@ -174,10 +174,11 @@ const CustomSelect: React.FC<CustomSelectProps> = ({
             {selectedOption ? selectedOption.label : placeholder}
           </span>
           <ChevronDown 
-            className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${
+            className={`w-5 h-5 text-gray-700 transition-transform duration-200 ${
               isOpen ? 'transform rotate-180' : ''
             }`}
             aria-hidden="true"
+            strokeWidth={2.5}
           />
         </button>
 
