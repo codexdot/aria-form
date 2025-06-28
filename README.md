@@ -153,6 +153,7 @@ The application uses Tailwind CSS with a custom design system:
 4. **Zoom**: Test at 200% zoom level
 
 ### Automated Testing Tools
+- accessibilitychecker.org (I used this: >95% compliance recorded)
 - axe-core browser extension
 - Lighthouse accessibility audit
 - WAVE (Web Accessibility Evaluation Tool)
