@@ -24,7 +24,7 @@ interface FormErrors {
 }
 
 /**
- * Main accessible contact form component
+ * Main accessible contact form component with proper landmark structure
  * Orchestrates all form sections and handles form submission
  */
 const AccessibleForm = () => {
@@ -189,71 +189,78 @@ const AccessibleForm = () => {
   };
 
   return (
-    <div className="space-y-8">
+    <div role="main" className="space-y-8">
       {/* Skip link for keyboard users */}
       <a 
-        href="#main-form" 
+        href="#contact-form" 
         className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 bg-blue-600 text-white px-4 py-2 rounded-lg z-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
       >
-        Skip to main form
+        Skip to contact form
       </a>
 
-      <FormHeader />
+      {/* Header section as a banner landmark */}
+      <header role="banner">
+        <FormHeader />
+      </header>
 
-      <form 
-        ref={formRef}
-        id="main-form"
-        onSubmit={handleSubmit} 
-        noValidate 
-        role="form" 
-        aria-label="Contact form"
-        aria-describedby="form-instructions"
-        className="space-y-8"
-      >
-        <div id="form-instructions" className="sr-only">
-          This form allows you to send us a message. Navigate through fields using Tab key. Required fields are marked with asterisk and will be announced by screen readers.
-        </div>
+      {/* Main form section */}
+      <section role="form" aria-labelledby="form-title">
+        <h2 id="form-title" className="sr-only">Contact Form</h2>
+        
+        <form 
+          ref={formRef}
+          id="contact-form"
+          onSubmit={handleSubmit} 
+          noValidate 
+          aria-label="Contact form"
+          aria-describedby="form-instructions"
+          className="space-y-8"
+        >
+          <div id="form-instructions" className="sr-only">
+            This form allows you to send us a message. Navigate through fields using Tab key. Required fields are marked with asterisk and will be announced by screen readers.
+          </div>
 
-        <PersonalInfoSection
-          formData={formData}
-          errors={errors}
-          onInputChange={handleInputChange}
-        />
+          <PersonalInfoSection
+            formData={formData}
+            errors={errors}
+            onInputChange={handleInputChange}
+          />
 
-        <MessageDetailsSection
-          formData={formData}
-          errors={errors}
-          onInputChange={handleInputChange}
-        />
+          <MessageDetailsSection
+            formData={formData}
+            errors={errors}
+            onInputChange={handleInputChange}
+          />
 
-        <NewsletterSection
-          checked={formData.newsletter}
-          onChange={(checked) => handleInputChange('newsletter', checked)}
-        />
+          <NewsletterSection
+            checked={formData.newsletter}
+            onChange={(checked) => handleInputChange('newsletter', checked)}
+          />
 
-        <SubmitSection isSubmitting={isSubmitting} />
+          <SubmitSection isSubmitting={isSubmitting} />
 
-        {/* Enhanced Screen reader announcements */}
-        <div aria-live="polite" aria-atomic="true" className="sr-only">
-          {Object.keys(errors).length > 0 && (
-            <div>
-              <p>Form validation failed. Please review and correct the following errors:</p>
-              <ul>
-                {Object.entries(errors).map(([field, error]) => (
-                  <li key={field}>{field}: {error}</li>
-                ))}
-              </ul>
-            </div>
-          )}
-        </div>
+          {/* Enhanced Screen reader announcements */}
+          <div aria-live="polite" aria-atomic="true" className="sr-only">
+            {Object.keys(errors).length > 0 && (
+              <div>
+                <p>Form validation failed. Please review and correct the following errors:</p>
+                <ul>
+                  {Object.entries(errors).map(([field, error]) => (
+                    <li key={field}>{field}: {error}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
 
-        {/* Status announcements */}
-        <div aria-live="assertive" aria-atomic="true" className="sr-only">
-          {isSubmitting && (
-            <p>Form is being submitted. Please wait.</p>
-          )}
-        </div>
-      </form>
+          {/* Status announcements */}
+          <div aria-live="assertive" aria-atomic="true" className="sr-only">
+            {isSubmitting && (
+              <p>Form is being submitted. Please wait.</p>
+            )}
+          </div>
+        </form>
+      </section>
     </div>
   );
 };
