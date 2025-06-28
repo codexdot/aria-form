@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from 'react';
 import { toast } from 'sonner';
 import FormHeader from './FormHeader';
@@ -189,7 +188,7 @@ const AccessibleForm = () => {
   };
 
   return (
-    <div role="main" className="space-y-8">
+    <>
       {/* Skip link for keyboard users */}
       <a 
         href="#contact-form" 
@@ -198,21 +197,19 @@ const AccessibleForm = () => {
         Skip to contact form
       </a>
 
-      {/* Header section as a banner landmark */}
+      {/* Header section as a banner landmark at top level */}
       <header role="banner">
         <FormHeader />
       </header>
 
-      {/* Main form section */}
-      <section role="form" aria-labelledby="form-title">
-        <h2 id="form-title" className="sr-only">Contact Form</h2>
-        
+      {/* Main content area */}
+      <main role="main">
         <form 
           ref={formRef}
           id="contact-form"
           onSubmit={handleSubmit} 
           noValidate 
-          aria-label="Contact form"
+          aria-label="Contact form for submitting inquiries"
           aria-describedby="form-instructions"
           className="space-y-8"
         >
@@ -260,8 +257,8 @@ const AccessibleForm = () => {
             )}
           </div>
         </form>
-      </section>
-    </div>
+      </main>
+    </>
   );
 };
 

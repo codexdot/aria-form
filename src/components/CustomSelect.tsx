@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { ChevronDown, Check } from 'lucide-react';
 
@@ -224,7 +223,6 @@ const CustomSelect: React.FC<CustomSelectProps> = ({
           className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white hover:border-gray-400 transition-colors text-left flex items-center justify-between"
           aria-haspopup="listbox"
           aria-expanded={isOpen}
-          aria-labelledby={`${id}-label`}
           aria-describedby={describedBy}
           aria-required={required}
         >
